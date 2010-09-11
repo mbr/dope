@@ -1,0 +1,9 @@
+{% block title %}
+Upload successful
+{% endblock %}
+
+{% block content %}
+<p>Your file has been uploaded. You can use the following link to others to allow them to download your file: <a href="{{f.download_url}}" title="Download {{f.filename}}">{{f.absolute_download_url}}</a></p>
+
+
+{% endblock %}
