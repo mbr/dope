@@ -55,6 +55,26 @@ class FileStorage(object):
 		assert(isinstance(id, uuid.UUID))
 		return os.path.join(self.path, str(id))
 
+class User(db.Model):
+	__tablename__ = 'users'
+	id = db.Column(db.Integer, primary_key = True)
+
+	def __str__(self):
+		return "<User:%d (%s)>" % (self.id, ", ".join(map(str, self.openids)))
+
+class OpenID(db.Model):
+	__tablename__ = 'openids'
+	id = db.Column(db.String, primary_key = True)
+	user_id = db.Column(db.Integer, db.ForeignKey(User.id))
+	user = db.relation(User, backref = db.backref('openids'))
+
+	def __init__(self, url, user):
+		self.id = url
+		self.user = user
+
+	def __str__(self):
+		return str(self.id)
+
 class File(db.Model):
 	__tablename__ = 'files'
 
@@ -68,6 +88,8 @@ class File(db.Model):
 	times_downloaded = db.Column(db.Integer)
 	content_type = db.Column(db.String)
 	access_key = db.Column(db.String)
+	owner_id = db.Column(db.Integer, db.ForeignKey(User.id))
+	owner = db.relation(User, backref = db.backref('owned_files'))
 
 	def __init__(self, storage, file_, ttl_delta = None):
 		# id: primary key
