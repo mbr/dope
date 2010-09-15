@@ -74,6 +74,7 @@ def create_or_login(resp):
 	return redirect(oid.get_next_url())
 
 @app.route('/upload/', methods = ('GET', 'POST'))
+@require_login
 def index():
 	form = forms.UploadForm(request.form)
 	if form.validate_on_submit():
