@@ -122,3 +122,65 @@ class File(db.Model):
 	@property
 	def absolute_download_url(self):
 		return url_for('download', public_id = str(self.public_id), _external = True)
+
+class ACLAction(db.Model):
+	__tablename__ = 'acl_actions'
+	id = db.Column(db.Integer, primary_key = True)
+	identifier = db.Column(db.String, index = True, unique = True)
+
+	def __init__(self, identifier):
+		self.identifier = identifier
+
+	def __str__(self):
+		return self.identifier
+
+class ACLPair(db.Model):
+	__tablename__ = 'acl'
+	__table_args__ = db.UniqueConstraint('value','priority','user_id','action_id')
+
+	# we want to be sqlite compatible, but sqlite cannot handle
+	# multi-column primary keys properly. the UniqueConstraint above is actually
+	# a workaround for this, without it, we would not need the "id" column
+	id = db.Column(db.Integer, primary_key = True)
+
+	user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable = True)
+	action_id = db.Column(db.Integer, db.ForeignKey(ACLAction.id))
+	value = db.Column(db.Integer)
+	priority = db.Column(db.Integer)
+
+	action = db.relation(ACLAction)
+	user = db.relation(User)
+
+	def __init__(self, user, action, value, priority = None):
+		self.action = action
+		self.user = user
+		self.value = value
+		if None == priority:
+			# get first available priority
+			db.session.flush()
+			q = db.select([db.func.max(ACLPair.priority)], whereclause = db.and_(ACLPair.user == user, ACLPair.action == action))
+			priority = db.session.execute(q).fetchone()[0]
+			if None == priority: priority = 0
+			else: priority += 1
+
+			self.priority = priority
+		else: self.priority = priority
+db.Index('unique_acl', ACLPair.user_id, ACLPair.action_id, ACLPair.priority, ACLPair.value)
+
+def check_acl(user, action):
+	if not isinstance(action, ACLAction):
+		# retrieve action by string
+		action = ACLAction.query.filter_by(identifier = str(action)).one()
+
+	# we cannot do everything in a single query, as there is no suppport for nullsfirst in SQLAlchemy yet
+
+	# so, first check for specific ACLs
+	if None != user:
+		acl = ACLPair.query.filter_by(user = user, action = action).order_by(db.desc(ACLPair.value)).first()
+		if acl: return acl.value
+
+	# if no match, look for a generic match next
+	acl = ACLPair.query.filter_by(user = None, action = action).order_by(db.desc(ACLPair.value)).first()
+	if acl: return acl.value
+
+	raise Exception('ACL ran out of ideas finding %s for %s' % (action, user))
