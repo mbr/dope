@@ -32,7 +32,7 @@ def require_login(f):
 def lookup_current_user():
 	g.user = None
 	if 'userid' in session:
-		g.user = model.User.query.filter_by(id = session['userid'])
+		g.user = model.User.query.filter_by(id = session['userid']).one()
 
 	debug('user: %s', g.user)
 
