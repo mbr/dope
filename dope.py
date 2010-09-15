@@ -28,6 +28,17 @@ def require_login(f):
 
 	return wrapper
 
+def require_permission(action_name):
+	def decorator(f):
+		@wraps(f)
+		def wrapper(*args, **kwargs):
+			# check if there is permission to do action_name
+			user = getattr(g, 'user', None)
+			if not model.check_acl(user, action_name): raise Exception('Permission denied')
+			return f(*args, **kwargs)
+		return wrapper
+	return decorator
+
 @app.before_request
 def lookup_current_user():
 	g.user = None
