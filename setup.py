@@ -12,5 +12,5 @@ upload_files = ACLAction('upload_files')
 db.session.add(upload_files)
 
 # create base ACL
-db.session.add(ACLPair(None, upload_files, True))
+db.session.add(ACLPair(None, upload_files, False))
 db.session.commit()
