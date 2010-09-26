@@ -1,0 +1,11 @@
+{% extends "base.xhtml" %}
+
+{% block content %}
+{{error}}
+<form action="." method="post">
+{{form.hidden_tag()}}
+{{form.openid.label}}
+{{form.openid}}
+<input type="submit" value="Next"/>
+</form>
+{% endblock %}
