@@ -7,6 +7,7 @@
 </head>
 <body>
 {% block body %}
+<img src="{{url_for('static', filename = 'img/dope_banner.png')}}" alt="DOPE banner" id="banner"/>
 {% block menu %}
 <ul class="hmenu" width="100%">
 <li><a href="{{url_for('index')}}" title="Return home">Home</a></li>
