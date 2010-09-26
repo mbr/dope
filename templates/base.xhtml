@@ -3,9 +3,16 @@
 <head>
 <title>{% block pagetitle %}{% block title %}{{title}}{% endblock %}{% endblock %}</title>
 <link rel="stylesheet" type="text/css" href="http://github.com/mbr/draft-css/raw/master/simple-ssbw.css" />
+<link rel="stylesheet" type="text/css" href="http://github.com/mbr/draft-css/raw/master/simple-menu.css" />
 </head>
 <body>
 {% block body %}
+{% block menu %}
+<ul class="hmenu" width="100%">
+<li><a href="{{url_for('index')}}" title="Return home">Home</a></li>
+<li><div>This is dope.</div></li>
+</ul>
+{% endblock %}
 {% block content %}
 {% endblock %}
 {% endblock %}
