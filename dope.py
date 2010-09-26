@@ -59,7 +59,7 @@ def login():
 	if request.method == 'POST':
 		return oid.try_login(form.openid.data)
 
-	return render_template('openidlogin.xhtml', form = form, error = oid.fetch_error())
+	return render_template('openidlogin.xhtml', form = form, error = oid.fetch_error(), title = 'Please login')
 
 @oid.after_login
 def create_or_login(resp):
