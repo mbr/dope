@@ -86,7 +86,7 @@ def create_or_login(resp):
 
 @app.route('/upload/', methods = ('GET', 'POST'))
 @require_login
-def index():
+def upload():
 	form = forms.UploadForm(request.form)
 	if form.validate_on_submit():
 		# create new file object
@@ -113,6 +113,10 @@ def download(public_id):
 	resp.content_length = f.size
 
 	return resp
+
+@app.route('/')
+def index():
+	return render_template('index.xhtml', title = 'This is DOPE.')
 
 if __name__ == '__main__':
 	app.run(debug = app.config['DEBUG'], use_debugger = app.config['DEBUG'], use_reloader = app.config['DEBUG'])
