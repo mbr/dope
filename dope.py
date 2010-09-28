@@ -28,13 +28,20 @@ def require_login(f):
 
 	return wrapper
 
-def require_permission(action_name):
+def require_permission(verb, obj = None):
 	def decorator(f):
 		@wraps(f)
 		def wrapper(*args, **kwargs):
 			# check if there is permission to do action_name
 			user = getattr(g, 'user', None)
-			if not model.check_acl(user, action_name): raise Exception('Permission denied')
+			if not model.user_has_permission(user, verb, obj):
+				# check if a login would redeem our situation
+				registered = db.session.query(model.Group).filter_by(name = "registered").one()
+				if registered.may(verb, obj):
+					return redirect(url_for('login', next = request.url))
+
+				debug('login futile: %s on %s',verb,obj)
+				raise Exception("Permission denied")
 			return f(*args, **kwargs)
 		return wrapper
 	return decorator
@@ -85,7 +92,7 @@ def create_or_login(resp):
 	return redirect(oid.get_next_url())
 
 @app.route('/upload/', methods = ('GET', 'POST'))
-@require_login
+@require_permission('upload_file')
 def upload():
 	form = forms.UploadForm(request.form)
 	if form.validate_on_submit():

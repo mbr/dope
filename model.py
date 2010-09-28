@@ -11,6 +11,8 @@ from Crypto.Util.randpool import RandomPool
 
 import uuidtype
 
+import acl
+
 from flask import url_for, send_file
 from app import *
 
@@ -55,12 +57,43 @@ class FileStorage(object):
 		assert(isinstance(id, uuid.UUID))
 		return os.path.join(self.path, str(id))
 
+user_group_table = db.Table('user_group', db.metadata,
+                              db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
+                              db.Column('group_id', db.Integer, db.ForeignKey('groups.id'))
+                           )
+
 class User(db.Model):
 	__tablename__ = 'users'
 	id = db.Column(db.Integer, primary_key = True)
+	groups = db.relation('Group', secondary = user_group_table, backref = 'users')
 
 	def __str__(self):
 		return "<User:%d (%s)>" % (self.id, ", ".join(map(str, self.openids)))
+
+class Group(db.Model, acl.ACLSubjectRef):
+	# strictly additive
+	__tablename__ = 'groups'
+	id = db.Column(db.Integer, primary_key = True)
+	name = db.Column(db.String, nullable = True, unique = True)
+
+	def __str__(self):
+		return ("Group #%d" % self.id) if not self.name else self.name
+
+def get_groups_of(user):
+	if None == user: groups = [db.session.query(Group).filter_by(name = 'anonymous').one()]
+	else: return [db.session.query(Group).filter_by(name = 'registered')] + user.groups
+
+	debug('retrieved groups for user %s: %s', user, groups)
+	return groups
+
+def user_has_permission(user, verb, obj):
+	# use strictly additive model
+	groups = get_groups_of(user)
+	for group in groups:
+		perm = group.may(verb, obj)
+		debug('checking group %s: %s', group, perm)
+		if perm: return True
+	return False
 
 class OpenID(db.Model):
 	__tablename__ = 'openids'
@@ -122,65 +155,3 @@ class File(db.Model):
 	@property
 	def absolute_download_url(self):
 		return url_for('download', public_id = str(self.public_id), _external = True)
-
-class ACLAction(db.Model):
-	__tablename__ = 'acl_actions'
-	id = db.Column(db.Integer, primary_key = True)
-	identifier = db.Column(db.String, index = True, unique = True)
-
-	def __init__(self, identifier):
-		self.identifier = identifier
-
-	def __str__(self):
-		return self.identifier
-
-class ACLPair(db.Model):
-	__tablename__ = 'acl'
-	__table_args__ = db.UniqueConstraint('value','priority','user_id','action_id')
-
-	# we want to be sqlite compatible, but sqlite cannot handle
-	# multi-column primary keys properly. the UniqueConstraint above is actually
-	# a workaround for this, without it, we would not need the "id" column
-	id = db.Column(db.Integer, primary_key = True)
-
-	user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable = True)
-	action_id = db.Column(db.Integer, db.ForeignKey(ACLAction.id))
-	value = db.Column(db.Integer)
-	priority = db.Column(db.Integer)
-
-	action = db.relation(ACLAction)
-	user = db.relation(User)
-
-	def __init__(self, user, action, value, priority = None):
-		self.action = action
-		self.user = user
-		self.value = value
-		if None == priority:
-			# get first available priority
-			db.session.flush()
-			q = db.select([db.func.max(ACLPair.priority)], whereclause = db.and_(ACLPair.user == user, ACLPair.action == action))
-			priority = db.session.execute(q).fetchone()[0]
-			if None == priority: priority = 0
-			else: priority += 1
-
-			self.priority = priority
-		else: self.priority = priority
-db.Index('unique_acl', ACLPair.user_id, ACLPair.action_id, ACLPair.priority, ACLPair.value)
-
-def check_acl(user, action):
-	if not isinstance(action, ACLAction):
-		# retrieve action by string
-		action = ACLAction.query.filter_by(identifier = str(action)).one()
-
-	# we cannot do everything in a single query, as there is no suppport for nullsfirst in SQLAlchemy yet
-
-	# so, first check for specific ACLs
-	if None != user:
-		acl = ACLPair.query.filter_by(user = user, action = action).order_by(db.desc(ACLPair.value)).first()
-		if acl: return acl.value
-
-	# if no match, look for a generic match next
-	acl = ACLPair.query.filter_by(user = None, action = action).order_by(db.desc(ACLPair.value)).first()
-	if acl: return acl.value
-
-	raise Exception('ACL ran out of ideas finding %s for %s' % (action, user))
