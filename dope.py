@@ -110,6 +110,7 @@ def upload():
 	return render_template('upload.xhtml', title = 'Upload file.', form = form_markup)
 
 @app.route('/download/<public_id>')
+@require_permission('download_file')
 def download(public_id):
 	try:
 		f = model.File.query.filter_by(public_id = uuid.UUID(public_id)).first_or_404()
