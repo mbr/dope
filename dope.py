@@ -39,7 +39,6 @@ def require_permission(verb, obj = None):
 				registered = db.session.query(model.Group).filter_by(name = "registered").one()
 				if registered.may(verb, obj):
 					return redirect(url_for('login', next = request.url))
-
 				debug('login futile: %s on %s',verb,obj)
 				raise Exception("Permission denied")
 			return f(*args, **kwargs)
