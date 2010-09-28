@@ -81,7 +81,7 @@ class Group(db.Model, acl.ACLSubjectRef):
 
 def get_groups_of(user):
 	if None == user: groups = [db.session.query(Group).filter_by(name = 'anonymous').one()]
-	else: return [db.session.query(Group).filter_by(name = 'registered')] + user.groups
+	else: groups = [db.session.query(Group).filter_by(name = 'registered').one()] + user.groups
 
 	debug('retrieved groups for user %s: %s', user, groups)
 	return groups
