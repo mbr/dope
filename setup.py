@@ -2,6 +2,7 @@
 # coding=utf8
 
 import sys
+import os
 
 from dope import db
 import model
@@ -19,6 +20,9 @@ def read_openid():
 	while True:
 		sys.stdout.write('Enter the OpenID for the admin account: ')
 		openid = sys.stdin.readline().strip()
+		if not openid.startswith('http'):
+			sys.stdout.write('That is not a valid OpenID (does not start with "http")' + os.linesep)
+			continue
 		sys.stdout.write('Using OpenID "%s". Is that correct? ' % openid)
 		if read_yesno(): return openid
 
