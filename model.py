@@ -86,7 +86,7 @@ def get_groups_of(user):
 	debug('retrieved groups for user %s: %s', user, groups)
 	return groups
 
-def user_has_permission(user, verb, obj):
+def user_has_permission(user, verb, obj = None):
 	# use strictly additive model
 	groups = get_groups_of(user)
 	for group in groups:
