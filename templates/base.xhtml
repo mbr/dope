@@ -12,7 +12,11 @@
 {% block menu %}
 <ul class="hmenu" width="100%">
 <li><a href="{{url_for('index')}}" title="Return home">Home</a></li>
-<li><div>This is dope.</div></li>
+{% if not g.user %}
+<li><a href="{{url_for('login')}}" title="Login using OpenID">Login using OpenID</a></li>
+{% else %}
+<li><div>You are logged in.</div></li>
+{% endif %}
 </ul>
 {% endblock %}
 {% if title %}<h1>{{title}}</h1>{% endif %}</h1>
