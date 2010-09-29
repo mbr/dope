@@ -116,6 +116,28 @@ def download(public_id):
 
 	return resp
 
+@app.route('/edit-permissions/', methods = ('GET', 'POST'))
+@require_permission('change_user_and_groups')
+def edit_permissions():
+	form = forms.SelectUser(request.form)
+	if form.validate_on_submit():
+		return redirect(url_for('edit_permissions_for_user', user_id = form.user.data.id))
+	form_markup = render_template('select_user_form.xhtml', form = form)
+	return render_template('base.xhtml', unsafe_content = form_markup)
+
+@app.route('/edit-permissions/<int:user_id>/', methods = ('GET', 'POST'))
+def edit_permissions_for_user(user_id = None):
+	user = model.User.query.get(user_id)
+	form = forms.create_permissions_form(request.form, groups = (group.id for group in user.groups))
+	if form.validate_on_submit():
+		# update groups
+		user.groups = [group for group in db.session.query(model.Group).filter(model.Group.id.in_(form.groups.data)).all()]
+		db.session.add(user)
+		db.session.commit()
+		return redirect(url_for('edit_permissions'))
+	form_markup = render_template('permissions_form.xhtml', form = form, user = user)
+	return render_template('base.xhtml', unsafe_content = form_markup)
+
 @app.route('/')
 def index():
 	return render_template('index.xhtml', title = 'This is DOPE.')

@@ -15,6 +15,9 @@
 {% if g.user_has_permission(g.user, 'upload_file') %}
 <li><a href="{{url_for('upload')}}" title="Upload a file.">Upload file</a></li>
 {% endif %}
+{% if g.user_has_permission(g.user, 'change_user_and_groups') %}
+<li><a href="{{url_for('edit_permissions')}}" title="Change permissions for groups or group membership.">Change users/groups</a></li>
+{% endif %}
 {% if not g.user %}
 <li><a href="{{url_for('login')}}" title="Login using OpenID">Login using OpenID</a></li>
 {% else %}
@@ -24,6 +27,7 @@
 {% endblock %}
 {% if title %}<h1>{{title}}</h1>{% endif %}
 {% block content %}
+{{unsafe_content|safe}}
 {% endblock %}
 {% endblock %}
 </body>
