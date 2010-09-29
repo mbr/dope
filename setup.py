@@ -43,13 +43,7 @@ admins = model.Group(name = 'admins')
 
 db.session.add_all([anonymous, registered, uploaders, admins])
 
-# the following acl verbs are recognized:
-# register
-# upload_file
-# download_file
-# delete_file
-# create_tickets
-
+# acl setup
 anonymous.permit('register')
 anonymous.permit('download_file')
 
@@ -59,6 +53,7 @@ admins.permit('upload_file')
 admins.permit('download_file')
 admins.permit('delete_file')
 admins.permit('create_tickets')
+admins.permit('change_user_and_groups')
 
 # create admin account
 u = model.create_new_user(openid)
