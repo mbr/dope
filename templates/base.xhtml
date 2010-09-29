@@ -12,6 +12,9 @@
 {% block menu %}
 <ul class="hmenu" width="100%">
 <li><a href="{{url_for('index')}}" title="Return home">Home</a></li>
+{% if g.user_has_permission(g.user, 'upload_file') %}
+<li><a href="{{url_for('upload')}}" title="Upload a file.">Upload file</a></li>
+{% endif %}
 {% if not g.user %}
 <li><a href="{{url_for('login')}}" title="Login using OpenID">Login using OpenID</a></li>
 {% else %}
