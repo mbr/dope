@@ -75,13 +75,7 @@ def create_or_login(resp):
 	o = model.OpenID.query.filter_by(id = resp.identity_url).first()
 	if not o:
 		# create a new user
-		u = model.User()
-		o = model.OpenID(resp.identity_url, u)
-		db.session.add(u)
-		db.session.add(o)
-		db.session.commit()
-
-		debug('created new user: %s', u)
+		u = model.create_new_user(resp.identity_url)
 	else:
 		u = o.user
 

@@ -108,6 +108,16 @@ class OpenID(db.Model):
 	def __str__(self):
 		return str(self.id)
 
+def create_new_user(openid_url):
+	u = User()
+	o = OpenID(openid_url, u)
+	db.session.add(u)
+	db.session.add(o)
+	db.session.commit()
+
+	debug('created new user: %s', u)
+	return u
+
 class File(db.Model):
 	__tablename__ = 'files'
 
