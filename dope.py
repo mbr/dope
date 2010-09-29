@@ -48,6 +48,7 @@ def require_permission(verb, obj = None):
 @app.before_request
 def lookup_current_user():
 	g.user = None
+	g.user_has_permission = model.user_has_permission
 	if 'userid' in session:
 		g.user = model.User.query.filter_by(id = session['userid']).one()
 
