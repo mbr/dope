@@ -1,7 +1,7 @@
 {% extends "base.xhtml" %}
 
 {% block content %}
-{{error}}
+{% if error %}{{error}}{% endif %}
 <form action="." method="post">
 {{form.hidden_tag()}}
 {{form.openid.label}}
