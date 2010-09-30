@@ -92,13 +92,19 @@ def create_or_login(resp):
 def upload():
 	form = forms.UploadForm(request.form)
 	if form.validate_on_submit():
-		# create new file object
-		f = model.File(storage, form.uploaded_file.file)
+		try:
+			# create new file object
+			f = model.File(storage, form.uploaded_file.file)
 
-		db.session.add(f)
-		db.session.commit()
+			db.session.add(f)
+			db.session.commit()
 
-		app.logger.debug('added: %s', f)
+			app.logger.debug('added: %s', f)
+		finally:
+			# close the uploaded file handle - otherwise we will
+			# "leak" a file on the filesystem that is the size of
+			# the uploaded file
+			form.uploaded_file.file.close()
 
 		return render_template('success.xhtml', f = f)
 
