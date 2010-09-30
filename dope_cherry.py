@@ -11,7 +11,6 @@
 
 from dope import app
 import cherrypy
-import drop_privileges
 
 # graft to tree root
 cherrypy.tree.graft(app)
