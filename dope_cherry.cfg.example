@@ -1,0 +1,5 @@
+[global]
+# set this to whatever user you want to run dope as. must have read access to the code/templates/etc.
+# and write to the openid and other subfolders
+run_as_user = 'dope'
+run_as_group = 'dope'

@@ -11,18 +11,17 @@ from dope import app
 import cherrypy
 import drop_privileges
 
-# set this to whatever user you want to run dope as. must have read access to the code/templates/etc.
-# and write to the openid and other subfolders
-run_as_user = 'nobody'
-run_as_group = 'nogroup'
-
 # graft to tree root
 cherrypy.tree.graft(app)
 
 # configure
 cherrypy.config.update({
 	'server.socket_port': 80,
+	'run_as_user': 'nobody',
+	'run_as_group': 'nogroup',
 })
 
+cherrypy.config.update('dope_cherry.cfg')
+
 # drop priviledges
-cherrypy.process.plugins.DropPrivileges(cherrypy.engine, uid = run_as_user, gid = run_as_group).subscribe()
+cherrypy.process.plugins.DropPrivileges(cherrypy.engine, uid = cherrypy.config['run_as_user'], gid = cherrypy.config['run_as_group']).subscribe()
