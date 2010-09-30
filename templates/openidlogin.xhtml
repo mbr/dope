@@ -2,10 +2,15 @@
 
 {% block content %}
 {% if error %}{{error}}{% endif %}
+<ul class="login_button_list">
+<p>Use one of the following acounts to sign in:
+<li><a href="{{url_for('login', openid = 'https://www.google.com/accounts/o8/id')}}" title="Login with your Google account"><img src="{{url_for('static', filename = 'img/social_icons/google_32.png')}}"/></a></li>
+<li><a href="{{url_for('login', openid = 'http://yahoo.com')}}" title="Login with your Yahoo account"><img src="{{url_for('static', filename = 'img/social_icons/yahoo_32.png')}}"/></a></li>
+</p>
+</ul>
 <form action="." method="post">
 {{form.hidden_tag()}}
-{{form.openid.label}}
-{{form.openid}}
-<input type="submit" value="Next"/>
+Or use your OpenID:<p><img src="{{url_for('static', filename = 'img/social_icons/openid_16.png')}}"/>
+{{form.openid}} <input type="submit" value="Login"/></p> 
 </form>
 {% endblock %}
