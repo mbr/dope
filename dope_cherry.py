@@ -18,6 +18,7 @@ cherrypy.tree.graft(app)
 # configure
 cherrypy.config.update({
 	'server.socket_port': 80,
+	'server.socket_host': '0.0.0.0',
 	'run_as_user': 'nobody',
 	'run_as_group': 'nogroup',
 })
