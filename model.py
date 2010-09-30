@@ -6,8 +6,7 @@ import uuid
 import logging
 from datetime import datetime
 import hashlib
-
-from Crypto.Util.randpool import RandomPool
+import Crypto.Random
 
 import uuidtype
 
@@ -16,7 +15,18 @@ import acl
 from flask import url_for, send_file
 from app import *
 
-randpool = RandomPool()
+class ForkSafeRandom(object):
+	def __init__(self):
+		self.rng = Crypto.Random.new()
+
+	def read(self, *args, **kwargs):
+		try:
+			return self.rng.read(*args, **kwargs)
+		except AssertionError:
+			Crypto.Random.atfork()
+			return self.rng.read(*args, **kwargs)
+
+rand = ForkSafeRandom()
 debug = app.logger.debug
 
 hashfunc = getattr(hashlib, app.config['HASHFUNC'])
@@ -145,7 +155,7 @@ class File(db.Model):
 		self.content_type = file_.content_type
 
 		# generate keys for access
-		key_base = '%s:::%s:::%s:::%s:::%d:::%s:::%s:::%s' % (self.filename, self.storage_id, self.uploaded, self.expires, self.size, self.content_type, repr(randpool.get_bytes(app.config['RANDOM_BYTES_PER_ID'])), app.config['SECRET_KEY'])
+		key_base = '%s:::%s:::%s:::%s:::%d:::%s:::%s:::%s' % (self.filename, self.storage_id, self.uploaded, self.expires, self.size, self.content_type, repr(randpool.read(app.config['RANDOM_BYTES_PER_ID'])), app.config['SECRET_KEY'])
 		self.access_key = hashfunc(key_base).hexdigest()
 		self.public_id = uuid.uuid4()
 
