@@ -43,10 +43,12 @@ admins = model.Group(name = 'admins')
 
 db.session.add_all([anonymous, registered, uploaders, admins])
 
-# acl setup
+# acl setup: base groups, user is in one or the other
 anonymous.permit('register')
 anonymous.permit('download_file')
+registered.permit('download_file')
 
+# extra groups
 uploaders.permit('upload_file')
 
 admins.permit('upload_file')
