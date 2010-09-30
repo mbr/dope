@@ -5,7 +5,9 @@
 # Running it will start dope at the document root, and the server on port 80.
 #
 # Assuming a virtual environment in which cherrypy is installed, this would be
-# the way to run it.
+# the way to run it:
+#
+# $ /path/to/virtualenv/bin/python /path/to/virtualenv/bin/cherryd -i dope_cherry
 
 from dope import app
 import cherrypy
