@@ -155,7 +155,7 @@ class File(db.Model):
 		self.content_type = file_.content_type
 
 		# generate keys for access
-		key_base = '%s:::%s:::%s:::%s:::%d:::%s:::%s:::%s' % (self.filename, self.storage_id, self.uploaded, self.expires, self.size, self.content_type, repr(randpool.read(app.config['RANDOM_BYTES_PER_ID'])), app.config['SECRET_KEY'])
+		key_base = '%s:::%s:::%s:::%s:::%d:::%s:::%s:::%s' % (self.filename, self.storage_id, self.uploaded, self.expires, self.size, self.content_type, repr(rand.read(app.config['RANDOM_BYTES_PER_ID'])), app.config['SECRET_KEY'])
 		self.access_key = hashfunc(key_base).hexdigest()
 		self.public_id = uuid.uuid4()
 
