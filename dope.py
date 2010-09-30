@@ -65,6 +65,8 @@ def login():
 	form = forms.OpenIDLoginForm(request.form, next = oid.get_next_url())
 	if request.method == 'POST':
 		return oid.try_login(form.openid.data)
+	elif 'openid' in request.args:
+		return oid.try_login(request.args['openid'])
 
 	return render_template('openidlogin.xhtml', form = form, error = oid.fetch_error(), title = 'Please login')
 
