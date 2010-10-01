@@ -8,13 +8,14 @@ from dope import db
 import model
 import acl
 
-def read_yesno():
+def read_yesno(msg = None):
 	while True:
+		if msg: sys.stdout.write(msg)
+		sys.stdout.write(' ')
 		l = sys.stdin.readline()
 		if l.lower().startswith('y'): return True
 		if l.lower().startswith('n'): return False
-		sys.stdout.write('Please enter "yes" or "no": ')
-
+		sys.stdout.write('\nPlease enter "yes" or "no".\n')
 
 def read_openid():
 	while True:
@@ -23,8 +24,7 @@ def read_openid():
 		if not openid.startswith('http'):
 			sys.stdout.write('That is not a valid OpenID (does not start with "http")' + os.linesep)
 			continue
-		sys.stdout.write('Using OpenID "%s". Is that correct? ' % openid)
-		if read_yesno(): return openid
+		if read_yesno('Using OpenID "%s". Is that correct?' % openid): return openid
 
 openid = read_openid()
 
