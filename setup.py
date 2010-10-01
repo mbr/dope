@@ -4,6 +4,7 @@
 import sys
 import os
 
+from app import app
 from dope import db
 import model
 import acl
@@ -25,6 +26,13 @@ def read_openid():
 			sys.stdout.write('That is not a valid OpenID (does not start with "http")' + os.linesep)
 			continue
 		if read_yesno('Using OpenID "%s". Is that correct?' % openid): return openid
+
+# create directories if needed
+if not os.path.exists(app.config['OPENID_FS_STORE_PATH']) and read_yesno('The OPENID_FS_STORE_PATH (%s) does not exist. Should I create it?' % app.config['OPENID_FS_STORE_PATH']):
+	os.mkdir(app.config['OPENID_FS_STORE_PATH'])
+
+if not os.path.exists(app.config['FILE_STORAGE']) and read_yesno('The FILE_STORAGE path (%s) does not exist. Should I create it?' % app.config['FILE_STORAGE']):
+	os.mkdir(app.config['FILE_STORAGE'])
 
 openid = read_openid()
 
