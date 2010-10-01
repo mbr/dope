@@ -1,0 +1,55 @@
+{% extends "base.xhtml" %}
+
+{% block head %}
+{{super()}}
+<link rel="stylesheet" type="text/css" href="{{url_for('static', filename = 'css/plupload.queue.css')}}" />
+<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+<script type="text/javascript">
+	google.load("jquery", "1.4.2");
+</script>
+<script type="text/javascript" src="{{url_for('static', filename = 'js/gears_init.js')}}"></script>
+<script type="text/javascript" src="http://bp.yahooapis.com/2.4.21/browserplus-min.js"></script>
+<script type="text/javascript" src="{{url_for('static', filename = 'js/plupload.full.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename = 'js/jquery.plupload.queue.min.js')}}"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+	$("#uploader").pluploadQueue({
+		// General settings
+		runtimes : '{{config['PLUPLOAD_RUNTIMES']|join(',')}}',
+		url : '{{url_for('upload_send_file')}}',
+		unique_names : false,
+		flash_swf_url : '{{url_for('static', filename = 'swf/plupload.flash.swf')}}'
+	});
+
+	// callbacks
+	$("#uploader").pluploadQueue().bind('FileUploaded', function(uploader, uploaded_file, response) {
+		rdata = jQuery.parseJSON(response.response);
+		listentry = $('<li></li>');
+		namespan = $('<span class="uploader_result_filename"></span>');
+		namespan.text(rdata.file_name);
+		listentry.append(namespan);
+		listentry.append(': Download at <a href="' + rdata.file_url + '">' + rdata.file_url + '</a>');
+		$('#results').append(listentry);
+
+		// check if we need to hide the queue
+		if (0 == $("#uploader").pluploadQueue().total.queued) {
+			// hide uploader
+			$("#uploader").hide();
+		}
+	})
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<form>
+<div id="uploader">Upload form goes here.</div>
+</form>
+
+<div>
+<p>Uploaded files are listed below:</p>
+<ul id="results">
+
+</ul>
+</div>
+{% endblock %}

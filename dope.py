@@ -5,7 +5,7 @@ from functools import wraps
 
 import uuid
 
-from flask import Flask, render_template, request, redirect, url_for, abort, g, session
+from flask import Flask, render_template, request, redirect, url_for, abort, g, session, jsonify
 from flaskext.openid import OpenID
 from werkzeug import secure_filename
 import forms
@@ -110,6 +110,26 @@ def single_upload():
 
 	form_markup = render_template('single_upload_form.xhtml', form = form)
 	return render_template('single_upload.xhtml', title = 'Upload file.', form = form_markup)
+
+@app.route('/upload')
+@require_permission('upload_file')
+def upload():
+	return render_template('upload.xhtml', title = 'Upload files.')
+
+@app.route('/upload/submit_file/', methods = ('GET', 'POST'))
+@require_permission('upload_file')
+def upload_send_file():
+	incoming = request.files['file']
+	try:
+		# create new file object
+		f = model.File(storage, incoming)
+
+		db.session.add(f)
+		db.session.commit()
+
+		return jsonify(file_url = f.absolute_download_url, file_name = f.filename)
+	finally:
+		incoming.close()
 
 @app.route('/download/<public_id>')
 @require_permission('download_file')
