@@ -87,9 +87,9 @@ def create_or_login(resp):
 	# redirect user where he wanted to go in the first place
 	return redirect(oid.get_next_url())
 
-@app.route('/upload/', methods = ('GET', 'POST'))
+@app.route('/single_upload/', methods = ('GET', 'POST'))
 @require_permission('upload_file')
-def upload():
+def single_upload():
 	form = forms.UploadForm(request.form)
 	if form.validate_on_submit():
 		try:
@@ -108,8 +108,8 @@ def upload():
 
 		return render_template('success.xhtml', f = f)
 
-	form_markup = render_template('upload_form.xhtml', form = form)
-	return render_template('upload.xhtml', title = 'Upload file.', form = form_markup)
+	form_markup = render_template('single_upload_form.xhtml', form = form)
+	return render_template('single_upload.xhtml', title = 'Upload file.', form = form_markup)
 
 @app.route('/download/<public_id>')
 @require_permission('download_file')
