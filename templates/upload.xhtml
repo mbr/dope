@@ -23,12 +23,23 @@ $(document).ready(function() {
 
 	// callbacks
 	$("#uploader").pluploadQueue().bind('FileUploaded', function(uploader, uploaded_file, response) {
-		rdata = jQuery.parseJSON(response.response);
 		listentry = $('<li></li>');
 		namespan = $('<span class="uploader_result_filename"></span>');
-		namespan.text(rdata.file_name);
+		namespan.text(uploaded_file.name);
 		listentry.append(namespan);
-		listentry.append(': Download at <a href="' + rdata.file_url + '">' + rdata.file_url + '</a>');
+		if (200 == response.status) {
+			rdata = jQuery.parseJSON(response.response);
+			listentry.append(': Download at <a href="' + rdata.file_url + '">' + rdata.file_url + '</a>');
+		} else {
+			listentry.append(': Failed. Code: ');
+			span_code = $('<span class="uploader_error_code">');
+			span_code.text(response.status);
+			span_msg = $('<span class="uploader_error_msg">');
+			span_msg.text(response.response);
+			listentry.append(span_code);
+			listentry.append(' ');
+			listentry.append(span_msg);
+		}
 		$('#results').append(listentry);
 
 		// check if we need to hide the queue
