@@ -5,7 +5,7 @@ from functools import wraps
 
 import uuid
 
-from flask import Flask, render_template, request, redirect, url_for, abort, g, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, abort, g, session, jsonify, request_finished
 from flaskext.openid import OpenID
 from werkzeug import secure_filename
 import forms
@@ -44,6 +44,10 @@ def require_permission(verb, obj = None):
 			return f(*args, **kwargs)
 		return wrapper
 	return decorator
+
+@request_finished.connect_via(app)
+def add_nocache_headers(sender, response):
+	response.headers.add('Cache-Control','no-cache, no-store, max-age=0, must-revalidate')
 
 @app.before_request
 def lookup_current_user():
