@@ -36,11 +36,13 @@ if not os.path.exists(app.config['FILE_STORAGE']) and read_yesno('The FILE_STORA
 
 openid = read_openid()
 
-db.drop_all()
-db.create_all()
 acl.Base.metadata.bind = db.engine
+
 acl.Base.metadata.drop_all()
+db.drop_all()
+
 acl.Base.metadata.create_all()
+db.create_all()
 
 # create initial groups
 anonymous = model.Group(name = 'anonymous') # pseudo-group
