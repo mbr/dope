@@ -66,7 +66,12 @@ def login():
 		g.user = None
 		debug('logged user out')
 
-	form = forms.OpenIDLoginForm(request.form, next = oid.get_next_url())
+	# if the user clicked on login from the index page,
+	# we want to redirect him directly to the upload page
+	next_url = oid.get_next_url()
+	if request.url_root == next_url: next_url = url_for('upload')
+
+	form = forms.OpenIDLoginForm(request.form, next = next_url)
 	if request.method == 'POST':
 		return oid.try_login(form.openid.data)
 	elif 'openid' in request.args:
