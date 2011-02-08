@@ -52,11 +52,11 @@ class FileStorage(object):
 
 		os.unlink(filename)
 
-	def send(self, file_id, filename, mimetype):
+	def send(self, file_id, filename, mimetype, force_download = True):
 		filepath = self._filename_from_uuid(file_id)
 
 		return send_file(filepath, mimetype,
-		                   as_attachment = True,
+		                   as_attachment = force_download,
 		                   attachment_filename = filename)
 
 	def size_of(self, file_id):

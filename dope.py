@@ -148,7 +148,7 @@ def download(public_id):
 	except ValueError:
 		abort(404)
 
-	resp = storage.send(f.storage_id, f.filename, f.content_type)
+	resp = storage.send(f.storage_id, f.filename, f.content_type, app.config['FORCE_DOWNLOAD'])
 	resp.content_length = f.size
 
 	return resp

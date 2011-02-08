@@ -8,3 +8,4 @@ HASHFUNC = 'sha256'
 FCGI_SOCKET = './dope.sock'
 OPENID_FS_STORE_PATH = './openid'
 PLUPLOAD_RUNTIMES = ['html5','html4']
+FORCE_DOWNLOAD = False
