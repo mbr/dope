@@ -86,8 +86,8 @@ class Group(db.Model, acl.ACLSubjectRef):
 	id = db.Column(db.Integer, primary_key = True)
 	name = db.Column(db.String, nullable = True, unique = True)
 
-	def __str__(self):
-		return ("Group #%d" % self.id) if not self.name else self.name
+	def __repr__(self):
+		return "<Group(id=%r,name=%r)>" % (self.id, self.name)
 
 def get_groups_of(user):
 	if None == user: groups = [db.session.query(Group).filter_by(name = 'anonymous').one()]
