@@ -59,8 +59,10 @@ anonymous.permit('download_file')
 registered.permit('download_file')
 
 # extra groups
+uploaders.permit('create_token')
 uploaders.permit('upload_file')
 
+admins.permit('create_token')
 admins.permit('upload_file')
 admins.permit('download_file')
 admins.permit('delete_file')
