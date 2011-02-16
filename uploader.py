@@ -2,6 +2,7 @@
 # coding=utf8
 
 import mimetypes
+import ConfigParser
 import os
 
 from warnings import warn
@@ -13,13 +14,16 @@ try:
 	# see http://stackoverflow.com/questions/43580/how-to-find-the-mime-type-of-a-file-in-python
 	m = magic.open(magic.MAGIC_MIME)
 	m.load()
+	magic_guess = lambda x: m.file(x)
 except ImportError:
 	warn('python-magic not available, no content-based mimetype guessing available')
-	m = None
+	magic_guess = lambda x: None
 
 def guess_mimetype(path):
 	mimetype = None
-	return m.file(path) or mimetypes.guess_type(path)[0] or None
+
+	# guess based on filename first - we don't want our .py files to be x-java!
+	return mimetypes.guess_type(path)[0] or magic_guess(path) or None
 
 class Uploader(object):
 	def __init__(self, url, token, signature):
@@ -39,8 +43,6 @@ class Uploader(object):
 			self.connection = HTTPSConnection(self.url.netloc)
 		else: self.connection = HTTPConnection(self.url.netloc)
 
-		self.connection.set_debuglevel(99999)
-
 		# connect, make first request
 		self.connection.connect()
 
@@ -59,9 +61,34 @@ class Uploader(object):
 
 if '__main__' == __name__:
 	import sys
+	configfile_path = os.path.expanduser('~/.dopeuploader')
 
-	token = '0c63407e39de11e098ea4061868c143d'
-	signature = 'a365dc0ae22e38d5169225df9e467e5eac19e72c80ff7ff2f06b3a1f75185ab6'
+	config = ConfigParser.RawConfigParser()
+	# read config file
+	if not os.path.exists(configfile_path):
+		config.add_section('dope')
+		config.set('dope', 'token', 'put_token_here')
+		config.set('dope', 'signature', 'put_signature_here')
+		with open(configfile_path, 'wb') as configfile:
+			config.write(configfile)
+		print >>sys.stderr, "created config file at %s" % configfile_path
+		sys.exit(1)
+	config.read(configfile_path)
 
-	uploader = Uploader('http://localhost:5000/api/token-upload', token, signature)
-	print uploader.upload_file(sys.argv[1]).read()
+	if 2 != len(sys.argv):
+		print >>sys.stderr, "usage: %s FILE" % os.path.basename(sys.argv[0])
+		sys.exit(3)
+	uploader = Uploader('http://localhost:5000/api/token-upload', config.get('dope', 'token'), config.get('dope', 'signature'))
+	response = uploader.upload_file(sys.argv[1])
+
+	# all ok?
+	if 200 == response.status:
+		print response.read()
+		sys.exit(0)
+
+	if 403 == response.status:
+		print >>sys.stderr, "bad token - check if settings in %s are correct" % configfile_path
+		sys.exit(1)
+
+	print >>sys.stderr, "error, server said %r" % response.status
+	sys.exit(2)
