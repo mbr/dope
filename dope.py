@@ -180,6 +180,17 @@ def edit_permissions_for_user(user_id = None):
 	form_markup = render_template('permissions_form.xhtml', form = form, user = user)
 	return render_template('base.xhtml', unsafe_content = form_markup)
 
+@app.route('/create-token/')
+@require_login
+@require_permission('create_token')
+def create_upload_token():
+	token = model.UploadToken(owner = g.user)
+	db.session.add(token)
+	db.session.commit()
+
+	return render_template('token_created.xhtml', token = token.id.hex, signature = token.get_signature(), tokenstring = token.id.hex + token.get_signature())
+
+
 @app.route('/')
 def index():
 	return render_template('index.xhtml', title = 'This is DOPE.')
