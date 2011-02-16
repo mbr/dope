@@ -67,6 +67,7 @@ if '__main__' == __name__:
 	# read config file
 	if not os.path.exists(configfile_path):
 		config.add_section('dope')
+		config.set('dope', 'url', 'http://some.dope.host/api/token-upload')
 		config.set('dope', 'token', 'put_token_here')
 		config.set('dope', 'signature', 'put_signature_here')
 		with open(configfile_path, 'wb') as configfile:
@@ -78,7 +79,7 @@ if '__main__' == __name__:
 	if 2 != len(sys.argv):
 		print >>sys.stderr, "usage: %s FILE" % os.path.basename(sys.argv[0])
 		sys.exit(3)
-	uploader = Uploader('http://localhost:5000/api/token-upload', config.get('dope', 'token'), config.get('dope', 'signature'))
+	uploader = Uploader(config.get('dope', 'url'), config.get('dope', 'token'), config.get('dope', 'signature'))
 	response = uploader.upload_file(sys.argv[1])
 
 	# all ok?
