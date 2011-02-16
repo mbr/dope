@@ -129,6 +129,7 @@ def create_new_user(openid_url):
 	return u
 
 class UploadToken(db.Model):
+	class InvalidTokenException(Exception): pass
 	__tablename__ = 'tokens'
 	id = db.Column(uuidtype.UUID, primary_key = True)
 	owner_id = db.Column(db.Integer, db.ForeignKey(User.id))
@@ -144,6 +145,14 @@ class UploadToken(db.Model):
 
 	def check_signature(self, signature, key = None):
 		return signature == self.get_signature(key)
+
+	@classmethod
+	def get_checked_token(class_, token_as_string, signature):
+		token_id = uuid.UUID(token_as_string)
+		token = db.session.query(class_).get(token_id)
+		if not token.check_signature(signature): raise class_.InvalidTokenException('Signature does not match')
+		return token
+
 
 class File(db.Model):
 	__tablename__ = 'files'

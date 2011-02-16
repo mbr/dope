@@ -5,6 +5,7 @@ from functools import wraps
 
 import uuid
 
+import werkzeug
 from flask import Flask, render_template, request, redirect, url_for, abort, g, session, jsonify, request_finished
 from flaskext.openid import OpenID
 from werkzeug import secure_filename
@@ -189,6 +190,29 @@ def create_upload_token():
 	db.session.commit()
 
 	return render_template('token_created.xhtml', token = token.id.hex, signature = token.get_signature(), tokenstring = token.id.hex + token.get_signature())
+
+@app.route('/api/token-upload', methods = ('POST',))
+def api_token_upload():
+	# check credentials
+	try:
+		token = model.UploadToken.get_checked_token(request.headers['X-Dope-Token'], request.headers['X-Dope-Signature'])
+	except (ValueError, KeyError, model.UploadToken.InvalidTokenException), e:
+		debug('aborting api upload: %r',e)
+		abort(403)
+
+	# store file
+	w = werkzeug.datastructures.FileStorage(
+		stream = request.stream,
+		filename = request.headers.get('X-Dope-Filename', None),
+		content_type = request.content_type,
+		content_length = request.content_length
+	)
+
+	f = model.File(storage, w)
+	db.session.add(f)
+	db.session.commit()
+
+	return f.absolute_download_url
 
 
 @app.route('/')
