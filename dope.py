@@ -147,10 +147,14 @@ def upload_send_file():
 		incoming.close()
 
 @app.route('/download/<public_id>')
+@app.route('/download/<public_id>/<as_filename>')
 @require_permission('download_file')
-def download(public_id):
+def download(public_id, as_filename = None):
 	try:
 		f = model.File.query.filter_by(public_id = uuid.UUID(public_id)).first_or_404()
+
+		# redirect so we get a proper filename when downloading
+		if app.config['SMART_FILENAME_REDIRECT'] and not as_filename: return redirect(url_for('download', public_id = public_id, as_filename = f.filename))
 	except ValueError:
 		abort(404)
 
