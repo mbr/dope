@@ -58,6 +58,11 @@ def lookup_current_user():
 
 	debug('user: %s', g.user)
 
+@app.before_request
+def persist_session():
+	if app.config['PERSIST_SESSION']:
+		session.permanent = True
+
 @app.route('/login/', methods = ('GET', 'POST'))
 @oid.loginhandler
 def login():
