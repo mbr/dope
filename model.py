@@ -128,6 +128,23 @@ def create_new_user(openid_url):
 	debug('created new user: %s', u)
 	return u
 
+class UploadToken(db.Model):
+	__tablename__ = 'tokens'
+	id = db.Column(uuidtype.UUID, primary_key = True)
+	owner_id = db.Column(db.Integer, db.ForeignKey(User.id))
+	owner = db.relation(User, backref = db.backref('owned_tokens'))
+
+	def __init__(self, id = None, **kwargs):
+		kwargs['id'] = id or uuid.uuid1()
+		super(UploadToken, self).__init__(**kwargs)
+
+	def get_signature(self, key = None):
+		clearinp = '%s||KEY||%s' % (self.id.hex, key or app.config['SECRET_KEY'])
+		return hashlib.sha256(clearinp).hexdigest()
+
+	def check_signature(self, signature, key = None):
+		return signature == self.get_signature(key)
+
 class File(db.Model):
 	__tablename__ = 'files'
 
