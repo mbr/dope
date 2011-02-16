@@ -141,7 +141,7 @@ class UploadToken(db.Model):
 
 	def get_signature(self, key = None):
 		clearinp = '%s||KEY||%s' % (self.id.hex, key or app.config['SECRET_KEY'])
-		return hashlib.sha256(clearinp).hexdigest()
+		return hashfunc(clearinp).hexdigest()
 
 	def check_signature(self, signature, key = None):
 		return signature == self.get_signature(key)
