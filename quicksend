@@ -84,6 +84,7 @@ if '__main__' == __name__:
 	num_errors = 0
 	for file_to_upload in sys.argv[1:]:
 		print ('%s:' % file_to_upload),
+		sys.stdout.flush()
 		response = uploader.upload_file(file_to_upload)
 
 		# all ok?
