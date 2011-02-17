@@ -73,23 +73,30 @@ if '__main__' == __name__:
 		with open(configfile_path, 'wb') as configfile:
 			config.write(configfile)
 		print >>sys.stderr, "created config file at %s" % configfile_path
-		sys.exit(1)
+		sys.exit(-1)
 	config.read(configfile_path)
 
-	if 2 != len(sys.argv):
-		print >>sys.stderr, "usage: %s FILE" % os.path.basename(sys.argv[0])
-		sys.exit(3)
+	if 1 >= len(sys.argv):
+		print >>sys.stderr, "usage: %s FILE1 FILE2..." % os.path.basename(sys.argv[0])
+		sys.exit(-2)
 	uploader = Uploader(config.get('dope', 'url'), config.get('dope', 'token'), config.get('dope', 'signature'))
-	response = uploader.upload_file(sys.argv[1])
 
-	# all ok?
-	if 200 == response.status:
-		print response.read()
-		sys.exit(0)
+	num_errors = 0
+	for file_to_upload in sys.argv[1:]:
+		print ('%s:' % file_to_upload),
+		response = uploader.upload_file(file_to_upload)
 
-	if 403 == response.status:
-		print >>sys.stderr, "bad token - check if settings in %s are correct" % configfile_path
-		sys.exit(1)
+		# all ok?
+		if 200 == response.status:
+			print response.read()
+			continue
 
-	print >>sys.stderr, "error, server said %r" % response.status
-	sys.exit(2)
+		if 403 == response.status:
+			print "bad token - check if settings in %s are correct" % configfile_path
+			num_errors += 1
+			continue
+
+		print "error, server said %r" % response.status
+		num_errors += 1
+
+	sys.exit(num_errors)
