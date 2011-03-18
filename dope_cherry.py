@@ -24,7 +24,5 @@ cherrypy.config.update({
 	'run_as_group': 'nogroup',
 })
 
-cherrypy.config.update('dope_cherry.cfg')
-
 # drop priviledges
 cherrypy.process.plugins.DropPrivileges(cherrypy.engine, uid = cherrypy.config['run_as_user'], gid = cherrypy.config['run_as_group']).subscribe()
