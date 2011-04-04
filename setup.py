@@ -11,4 +11,5 @@ setup(name = 'Dope',
       packages = ['dope', 'acl'],
       # requirements for acl are just sqlalchemy
       install_requires = ['sqlalchemy>=0.6.6', 'flask', 'Flask-SQLAlchemy', 'Flask-WTF'],
+      scripts = ['init_dope_db', 'quicksend'],
      )
