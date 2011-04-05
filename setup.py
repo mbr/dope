@@ -10,7 +10,7 @@ setup(name = 'Dope',
       url = 'https://github.com/mbr/dope',
       packages = ['dope', 'acl'],
       # requirements for acl are just sqlalchemy
-      install_requires = ['sqlalchemy>=0.6.6', 'flask', 'Flask-SQLAlchemy', 'Flask-WTF'],
+      install_requires = ['sqlalchemy>=0.6.6', 'flask', 'Flask-SQLAlchemy', 'Flask-WTF', 'pycrypto>=2.3'],
       scripts = ['init_dope_db', 'quicksend'],
       package_data = {'dope': ['static/js/*', 'static/css/*', 'static/img/*.*', 'static/img/plupload/*', 'static/img/social_icons/*', 'templates/*']},
       zip_safe = False,
