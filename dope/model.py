@@ -7,7 +7,7 @@ import logging
 from datetime import datetime
 
 import acl
-from flask import url_for, send_file, g
+from flask import url_for, send_file, current_app
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy import Column, Table, Integer, String, ForeignKey, Unicode, DateTime
@@ -80,8 +80,8 @@ class Group(Base, acl.ACLSubjectRef):
 
 
 def get_groups_of(user):
-	if None == user: groups = [g.session.query(Group).filter_by(name = 'anonymous').one()]
-	else: groups = [g.session.query(Group).filter_by(name = 'registered').one()] + user.groups
+	if None == user: groups = [current_app.session.query(Group).filter_by(name = 'anonymous').one()]
+	else: groups = [current_app.session.query(Group).filter_by(name = 'registered').one()] + user.groups
 
 	debug('retrieved groups for user %s: %s', user, groups)
 	return groups
@@ -114,9 +114,9 @@ class OpenID(Base):
 def create_new_user(openid_url):
 	u = User()
 	o = OpenID(openid_url, u)
-	g.session.add(u)
-	g.session.add(o)
-	g.session.commit()
+	current_app.session.add(u)
+	current_app.session.add(o)
+	current_app.session.commit()
 
 	debug('created new user: %s', u)
 	return u
@@ -143,7 +143,7 @@ class UploadToken(Base):
 	@classmethod
 	def get_checked_token(class_, token_as_string, signature):
 		token_id = uuid.UUID(token_as_string)
-		token = g.session.query(class_).get(token_id)
+		token = current_app.session.query(class_).get(token_id)
 		if not token.check_signature(signature): raise class_.InvalidTokenException('Signature does not match')
 		return token
 
