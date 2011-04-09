@@ -117,7 +117,7 @@ def single_upload():
 	if form.validate_on_submit():
 		try:
 			# create new file object
-			f = model.File(storage, form.uploaded_file.file)
+			f = model.File(current_app.storage, form.uploaded_file.file)
 
 			db.session.add(f)
 			db.session.commit()
@@ -147,7 +147,7 @@ def upload_send_file():
 	incoming = request.files['file']
 	try:
 		# create new file object
-		f = model.File(storage, incoming)
+		f = model.File(current_app.storage, incoming)
 
 		db.session.add(f)
 		db.session.commit()
@@ -169,7 +169,7 @@ def download(public_id, as_filename = None):
 	except ValueError:
 		abort(404)
 
-	resp = storage.send(f.storage_id, f.filename, f.content_type, current_app.config['FORCE_DOWNLOAD'])
+	resp = current_app.storage.send(f.storage_id, f.filename, f.content_type, current_app.config['FORCE_DOWNLOAD'])
 	resp.content_length = f.size
 
 	return resp
@@ -227,7 +227,7 @@ def api_token_upload():
 		content_length = request.content_length
 	)
 
-	f = model.File(storage, w)
+	f = model.File(current_app.storage, w)
 	db.session.add(f)
 	db.session.commit()
 
