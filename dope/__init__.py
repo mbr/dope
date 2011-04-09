@@ -4,11 +4,10 @@
 from flask import Flask
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
-from flaskext.openid import OpenID
 
 import model
 import defaults
-from views.frontend import frontend
+from views.frontend import frontend, oid
 
 def create_app(config_filename):
 	app = Flask(__name__)
@@ -25,7 +24,7 @@ def create_app(config_filename):
 		return response
 
 	app.storage = model.FileStorage(app.config['FILE_STORAGE'])
-	app.oid = frontend.oid
+	app.oid = oid
 	app.oid.init_app(app)
 
 	# load modules
