@@ -4,7 +4,7 @@
 from functools import wraps
 import uuid
 
-from flask import Module, Flask, render_template, request, redirect, url_for, abort, g, session, jsonify, request_finished
+from flask import Module, Flask, render_template, request, redirect, url_for, abort, g, session, jsonify, request_finished, current_app
 from flaskext.openid import OpenID
 import werkzeug
 from werkzeug import secure_filename
@@ -16,6 +16,9 @@ frontend = Module(__name__)
 
 # FIXME: this needs to become per-instance
 oid = OpenID()
+
+def debug(*args, **kwargs):
+	current_app.logger.debug(*args, **kwargs)
 
 def require_login(f):
 	@wraps(f)
@@ -119,7 +122,7 @@ def single_upload():
 			db.session.add(f)
 			db.session.commit()
 
-			app.logger.debug('added: %s', f)
+			debug('added: %s', f)
 		finally:
 			# close the uploaded file handle - otherwise we will
 			# "leak" a file on the filesystem that is the size of
