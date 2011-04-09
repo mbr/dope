@@ -66,7 +66,7 @@ def lookup_current_user():
 
 @frontend.before_request
 def persist_session():
-	if app.config['PERSIST_SESSION']:
+	if current_app.config['PERSIST_SESSION']:
 		session.permanent = True
 
 
@@ -165,11 +165,11 @@ def download(public_id, as_filename = None):
 		f = model.File.query.filter_by(public_id = uuid.UUID(public_id)).first_or_404()
 
 		# redirect so we get a proper filename when downloading
-		if app.config['SMART_FILENAME_REDIRECT'] and not as_filename: return redirect(url_for('download', public_id = public_id, as_filename = f.filename))
+		if current_app.config['SMART_FILENAME_REDIRECT'] and not as_filename: return redirect(url_for('download', public_id = public_id, as_filename = f.filename))
 	except ValueError:
 		abort(404)
 
-	resp = storage.send(f.storage_id, f.filename, f.content_type, app.config['FORCE_DOWNLOAD'])
+	resp = storage.send(f.storage_id, f.filename, f.content_type, current_app.config['FORCE_DOWNLOAD'])
 	resp.content_length = f.size
 
 	return resp
