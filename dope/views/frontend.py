@@ -12,6 +12,8 @@ from werkzeug import secure_filename
 import forms
 from .. import model
 
+from sqlalchemy.orm.exc import NoResultFound
+
 frontend = Module(__name__)
 
 # FIXME: this needs to become per-instance
@@ -162,11 +164,13 @@ def upload_send_file():
 @require_permission('download_file')
 def download(public_id, as_filename = None):
 	try:
-		f = current_app.session.query(model.File).filter_by(public_id = uuid.UUID(public_id)).first_or_404()
+		f = current_app.session.query(model.File).filter_by(public_id = uuid.UUID(public_id)).one()
 
 		# redirect so we get a proper filename when downloading
 		if current_app.config['SMART_FILENAME_REDIRECT'] and not as_filename: return redirect(url_for('download', public_id = public_id, as_filename = f.filename))
 	except ValueError:
+		abort(404)
+	except NoResultFound:
 		abort(404)
 
 	resp = current_app.storage.send(f.storage_id, f.filename, f.content_type, current_app.config['FORCE_DOWNLOAD'])
