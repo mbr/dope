@@ -8,7 +8,7 @@ setup(name = 'Dope',
       description = 'File uploading made easy (WSGI app).',
       author = 'Marc Brinkmann',
       url = 'https://github.com/mbr/dope',
-      packages = ['dope', 'acl'],
+      packages = ['dope', 'dope.views', 'acl'],
       # requirements for acl are just sqlalchemy
       install_requires = ['sqlalchemy>=0.6.6', 'flask', 'Flask-OpenID', 'Flask-WTF', 'pycrypto>=2.3', 'blinker'],
       scripts = ['init_dope_db', 'quicksend'],
