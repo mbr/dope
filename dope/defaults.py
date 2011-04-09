@@ -7,6 +7,7 @@ OPENID_FS_STORE_PATH = './openid'
 PLUPLOAD_RUNTIMES = ['html5','html4']
 FORCE_DOWNLOAD = False
 SMART_FILENAME_REDIRECT = True
+SQLALCHEMY_ECHO = False
 
 # use PERMANENT_SESSION_LIFETIME to set the time, default 31 days
 PERSIST_SESSION = True
