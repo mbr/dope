@@ -5,32 +5,20 @@ import os
 import uuid
 import logging
 from datetime import datetime
-import hashlib
-import Crypto.Random
-
-import uuidtype
 
 import acl
+from flask import url_for, send_file, g
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, backref
+from sqlalchemy import Column, Table, Integer, String, ForeignKey, Unicode, DateTime
 
-from flask import url_for, send_file
-from app import *
-
-class ForkSafeRandom(object):
-	def __init__(self):
-		self.rng = Crypto.Random.new()
-
-	def read(self, *args, **kwargs):
-		try:
-			return self.rng.read(*args, **kwargs)
-		except AssertionError:
-			Crypto.Random.atfork()
-			return self.rng.read(*args, **kwargs)
+import uuidtype
+from randomutil import ForkSafeRandom
 
 rand = ForkSafeRandom()
-debug = app.logger.debug
+debug = logging.debug
 
-hashfunc = getattr(hashlib, app.config['HASHFUNC'])
-hashsize = hashfunc().digest_size
+Base = declarative_base()
 
 class FileStorage(object):
 	def __init__(self, path):
@@ -63,38 +51,41 @@ class FileStorage(object):
 		return os.path.getsize(self._filename_from_uuid(file_id))
 
 	def _filename_from_uuid(self, id):
-		print(repr(id))
 		assert(isinstance(id, uuid.UUID))
 		return os.path.join(self.path, str(id))
 
-user_group_table = db.Table('user_group', db.metadata,
-                              db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
-                              db.Column('group_id', db.Integer, db.ForeignKey('groups.id'))
+user_group_table = Table('user_group', Base.metadata,
+                              Column('user_id', Integer, ForeignKey('users.id')),
+                              Column('group_id', Integer, ForeignKey('groups.id'))
                            )
 
-class User(db.Model):
+
+class User(Base):
 	__tablename__ = 'users'
-	id = db.Column(db.Integer, primary_key = True)
-	groups = db.relation('Group', secondary = user_group_table, backref = 'users')
+	id = Column(Integer, primary_key = True)
+	groups = relationship('Group', secondary = user_group_table, backref = 'users')
 
 	def __str__(self):
 		return "<User:%d (%s)>" % (self.id, ", ".join(map(str, self.openids)))
 
-class Group(db.Model, acl.ACLSubjectRef):
+
+class Group(Base, acl.ACLSubjectRef):
 	# strictly additive
 	__tablename__ = 'groups'
-	id = db.Column(db.Integer, primary_key = True)
-	name = db.Column(db.String, nullable = True, unique = True)
+	id = Column(Integer, primary_key = True)
+	name = Column(String, nullable = True, unique = True)
 
 	def __repr__(self):
 		return "<Group(id=%r,name=%r)>" % (self.id, self.name)
 
+
 def get_groups_of(user):
-	if None == user: groups = [db.session.query(Group).filter_by(name = 'anonymous').one()]
-	else: groups = [db.session.query(Group).filter_by(name = 'registered').one()] + user.groups
+	if None == user: groups = [g.session.query(Group).filter_by(name = 'anonymous').one()]
+	else: groups = [g.session.query(Group).filter_by(name = 'registered').one()] + user.groups
 
 	debug('retrieved groups for user %s: %s', user, groups)
 	return groups
+
 
 def user_has_permission(user, verb, obj = None):
 	# use strictly additive model
@@ -105,11 +96,12 @@ def user_has_permission(user, verb, obj = None):
 		if perm: return True
 	return False
 
-class OpenID(db.Model):
+
+class OpenID(Base):
 	__tablename__ = 'openids'
-	id = db.Column(db.String, primary_key = True)
-	user_id = db.Column(db.Integer, db.ForeignKey(User.id))
-	user = db.relation(User, backref = db.backref('openids'))
+	id = Column(String, primary_key = True)
+	user_id = Column(Integer, ForeignKey(User.id))
+	user = relationship(User, backref = backref('openids'))
 
 	def __init__(self, url, user):
 		self.id = url
@@ -118,22 +110,24 @@ class OpenID(db.Model):
 	def __str__(self):
 		return str(self.id)
 
+
 def create_new_user(openid_url):
 	u = User()
 	o = OpenID(openid_url, u)
-	db.session.add(u)
-	db.session.add(o)
-	db.session.commit()
+	g.session.add(u)
+	g.session.add(o)
+	g.session.commit()
 
 	debug('created new user: %s', u)
 	return u
 
-class UploadToken(db.Model):
+
+class UploadToken(Base):
 	class InvalidTokenException(Exception): pass
 	__tablename__ = 'tokens'
-	id = db.Column(uuidtype.UUID, primary_key = True)
-	owner_id = db.Column(db.Integer, db.ForeignKey(User.id))
-	owner = db.relation(User, backref = db.backref('owned_tokens'))
+	id = Column(uuidtype.UUID, primary_key = True)
+	owner_id = Column(Integer, ForeignKey(User.id))
+	owner = relationship(User, backref = backref('owned_tokens'))
 
 	def __init__(self, id = None, **kwargs):
 		kwargs['id'] = id or uuid.uuid1()
@@ -149,26 +143,26 @@ class UploadToken(db.Model):
 	@classmethod
 	def get_checked_token(class_, token_as_string, signature):
 		token_id = uuid.UUID(token_as_string)
-		token = db.session.query(class_).get(token_id)
+		token = g.session.query(class_).get(token_id)
 		if not token.check_signature(signature): raise class_.InvalidTokenException('Signature does not match')
 		return token
 
 
-class File(db.Model):
+class File(Base):
 	__tablename__ = 'files'
 
-	id = db.Column(db.Integer, primary_key = True)
-	filename = db.Column(db.Unicode)
-	storage_id = db.Column(uuidtype.UUID)
-	public_id = db.Column(uuidtype.UUID)
-	uploaded = db.Column(db.DateTime)
-	expires = db.Column(db.DateTime)
-	size = db.Column(db.Integer)
-	times_downloaded = db.Column(db.Integer)
-	content_type = db.Column(db.String)
-	access_key = db.Column(db.String)
-	owner_id = db.Column(db.Integer, db.ForeignKey(User.id))
-	owner = db.relation(User, backref = db.backref('owned_files'))
+	id = Column(Integer, primary_key = True)
+	filename = Column(Unicode)
+	storage_id = Column(uuidtype.UUID)
+	public_id = Column(uuidtype.UUID)
+	uploaded = Column(DateTime)
+	expires = Column(DateTime)
+	size = Column(Integer)
+	times_downloaded = Column(Integer)
+	content_type = Column(String)
+	access_key = Column(String)
+	owner_id = Column(Integer, ForeignKey(User.id))
+	owner = relationship(User, backref = backref('owned_files'))
 
 	def __init__(self, storage, file_, ttl_delta = None):
 		# id: primary key

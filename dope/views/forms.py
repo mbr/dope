@@ -2,7 +2,7 @@
 # coding=utf8
 
 from flaskext.wtf import Form, FileField, Required, TextField, HiddenField, QuerySelectField, SelectMultipleField, ListWidget, CheckboxInput
-import model
+from .. import model
 
 class UploadForm(Form):
 	uploaded_file = FileField(u'File to upload')

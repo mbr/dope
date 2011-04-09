@@ -2,22 +2,20 @@
 # coding=utf8
 
 from functools import wraps
-
 import uuid
 
-import werkzeug
-from flask import Flask, render_template, request, redirect, url_for, abort, g, session, jsonify, request_finished
+from flask import Module, Flask, render_template, request, redirect, url_for, abort, g, session, jsonify, request_finished
 from flaskext.openid import OpenID
+import werkzeug
 from werkzeug import secure_filename
+
 import forms
+from .. import model
 
-from app import *
-import model
+frontend = Module(__name__)
 
-storage = model.FileStorage(app.config['FILE_STORAGE'])
-oid = OpenID(app)
-
-debug = app.logger.debug
+# FIXME: this needs to become per-instance
+oid = OpenID()
 
 def require_login(f):
 	@wraps(f)
@@ -28,6 +26,7 @@ def require_login(f):
 		return f(*args, **kwargs)
 
 	return wrapper
+
 
 def require_permission(verb, obj = None):
 	def decorator(f):
@@ -46,11 +45,13 @@ def require_permission(verb, obj = None):
 		return wrapper
 	return decorator
 
-@request_finished.connect_via(app)
+
+@request_finished.connect_via(frontend)
 def add_nocache_headers(sender, response):
 	response.headers.add('Cache-Control','no-cache, no-store, max-age=0, must-revalidate')
 
-@app.before_request
+
+@frontend.before_request
 def lookup_current_user():
 	g.user = None
 	g.user_has_permission = model.user_has_permission
@@ -59,12 +60,14 @@ def lookup_current_user():
 
 	debug('user: %s', g.user)
 
-@app.before_request
+
+@frontend.before_request
 def persist_session():
 	if app.config['PERSIST_SESSION']:
 		session.permanent = True
 
-@app.route('/login/', methods = ('GET', 'POST'))
+
+@frontend.route('/login/', methods = ('GET', 'POST'))
 @oid.loginhandler
 def login():
 	if g.user is not None:
@@ -85,6 +88,7 @@ def login():
 
 	return render_template('openidlogin.xhtml', form = form, error = oid.fetch_error(), title = 'Please login')
 
+
 @oid.after_login
 def create_or_login(resp):
 	session['openid'] = resp.identity_url
@@ -102,7 +106,8 @@ def create_or_login(resp):
 	# redirect user where he wanted to go in the first place
 	return redirect(oid.get_next_url())
 
-@app.route('/single_upload/', methods = ('GET', 'POST'))
+
+@frontend.route('/single_upload/', methods = ('GET', 'POST'))
 @require_permission('upload_file')
 def single_upload():
 	form = forms.UploadForm(request.form)
@@ -126,12 +131,14 @@ def single_upload():
 	form_markup = render_template('single_upload_form.xhtml', form = form)
 	return render_template('single_upload.xhtml', title = 'Upload file.', form = form_markup)
 
-@app.route('/upload')
+
+@frontend.route('/upload')
 @require_permission('upload_file')
 def upload():
 	return render_template('upload.xhtml', title = 'Upload files.')
 
-@app.route('/upload/submit_file/', methods = ('GET', 'POST'))
+
+@frontend.route('/upload/submit_file/', methods = ('GET', 'POST'))
 @require_permission('upload_file')
 def upload_send_file():
 	incoming = request.files['file']
@@ -146,8 +153,9 @@ def upload_send_file():
 	finally:
 		incoming.close()
 
-@app.route('/download/<public_id>')
-@app.route('/download/<public_id>/<as_filename>')
+
+@frontend.route('/download/<public_id>')
+@frontend.route('/download/<public_id>/<as_filename>')
 @require_permission('download_file')
 def download(public_id, as_filename = None):
 	try:
@@ -163,7 +171,8 @@ def download(public_id, as_filename = None):
 
 	return resp
 
-@app.route('/edit-permissions/', methods = ('GET', 'POST'))
+
+@frontend.route('/edit-permissions/', methods = ('GET', 'POST'))
 @require_permission('change_user_and_groups')
 def edit_permissions():
 	form = forms.SelectUser(request.form)
@@ -172,7 +181,8 @@ def edit_permissions():
 	form_markup = render_template('select_user_form.xhtml', form = form)
 	return render_template('base.xhtml', unsafe_content = form_markup)
 
-@app.route('/edit-permissions/<int:user_id>/', methods = ('GET', 'POST'))
+
+@frontend.route('/edit-permissions/<int:user_id>/', methods = ('GET', 'POST'))
 def edit_permissions_for_user(user_id = None):
 	user = model.User.query.get(user_id)
 	form = forms.create_permissions_form(request.form, groups = (group.id for group in user.groups))
@@ -185,7 +195,8 @@ def edit_permissions_for_user(user_id = None):
 	form_markup = render_template('permissions_form.xhtml', form = form, user = user)
 	return render_template('base.xhtml', unsafe_content = form_markup)
 
-@app.route('/create-token/')
+
+@frontend.route('/create-token/')
 @require_login
 @require_permission('create_token')
 def create_upload_token():
@@ -195,7 +206,8 @@ def create_upload_token():
 
 	return render_template('token_created.xhtml', token = token.id.hex, signature = token.get_signature(), tokenstring = token.id.hex + token.get_signature())
 
-@app.route('/api/token-upload', methods = ('POST',))
+
+@frontend.route('/api/token-upload', methods = ('POST',))
 def api_token_upload():
 	# check credentials
 	try:
@@ -219,9 +231,6 @@ def api_token_upload():
 	return f.absolute_download_url
 
 
-@app.route('/')
+@frontend.route('/')
 def index():
 	return render_template('index.xhtml', title = 'This is DOPE.')
-
-if __name__ == '__main__':
-	app.run(debug = app.config['DEBUG'], use_debugger = app.config['DEBUG'], use_reloader = app.config['DEBUG'])

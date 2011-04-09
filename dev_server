@@ -1,0 +1,10 @@
+#!/usr/bin/env python
+# coding=utf8
+
+import os
+import sys
+
+import dope
+
+app = dope.create_app(os.path.abspath(sys.argv[1]))
+app.run(debug = True)
