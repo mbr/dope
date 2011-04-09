@@ -13,7 +13,7 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy import Column, Table, Integer, String, ForeignKey, Unicode, DateTime
 
 import uuidtype
-from randomutil import ForkSafeRandom
+from randomutil import ForkSafeRandom, hashfunc
 
 rand = ForkSafeRandom()
 debug = logging.debug
