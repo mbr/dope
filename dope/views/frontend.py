@@ -39,7 +39,7 @@ def require_permission(verb, obj = None):
 			user = getattr(g, 'user', None)
 			if not model.user_has_permission(user, verb, obj):
 				# check if a login would redeem our situation
-				registered = db.session.query(model.Group).filter_by(name = "registered").one()
+				registered = current_app.session.query(model.Group).filter_by(name = "registered").one()
 				if registered.may(verb, obj):
 					return redirect(url_for('login', next = request.url))
 				debug('login futile: %s on %s',verb,obj)
@@ -59,7 +59,7 @@ def lookup_current_user():
 	g.user = None
 	g.user_has_permission = model.user_has_permission
 	if 'userid' in session:
-		g.user = model.User.query.filter_by(id = session['userid']).one()
+		g.user = current_app.session.query(model.User).filter_by(id = session['userid']).one()
 
 	debug('user: %s', g.user)
 
@@ -97,7 +97,7 @@ def create_or_login(resp):
 	session['openid'] = resp.identity_url
 
 	# look up if open id exists
-	o = model.OpenID.query.filter_by(id = resp.identity_url).first()
+	o = current_app.session.query(model.OpenID).filter_by(id = resp.identity_url).first()
 	if not o:
 		# create a new user
 		u = model.create_new_user(resp.identity_url)
@@ -162,7 +162,7 @@ def upload_send_file():
 @require_permission('download_file')
 def download(public_id, as_filename = None):
 	try:
-		f = model.File.query.filter_by(public_id = uuid.UUID(public_id)).first_or_404()
+		f = current_app.session.query(model.File).filter_by(public_id = uuid.UUID(public_id)).first_or_404()
 
 		# redirect so we get a proper filename when downloading
 		if current_app.config['SMART_FILENAME_REDIRECT'] and not as_filename: return redirect(url_for('download', public_id = public_id, as_filename = f.filename))
@@ -187,11 +187,11 @@ def edit_permissions():
 
 @frontend.route('/edit-permissions/<int:user_id>/', methods = ('GET', 'POST'))
 def edit_permissions_for_user(user_id = None):
-	user = model.User.query.get(user_id)
+	user = current_app.session.query(model.User).get(user_id)
 	form = forms.create_permissions_form(request.form, groups = (group.id for group in user.groups))
 	if form.validate_on_submit():
 		# update groups
-		user.groups = [group for group in db.session.query(model.Group).filter(model.Group.id.in_(form.groups.data)).all()]
+		user.groups = [group for group in current_app.session.query(model.Group).filter(model.Group.id.in_(form.groups.data)).all()]
 		db.session.add(user)
 		db.session.commit()
 		return redirect(url_for('edit_permissions'))

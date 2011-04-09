@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding=utf8
 
+from flask import current_app
 from flaskext.wtf import Form, FileField, Required, TextField, HiddenField, QuerySelectField, SelectMultipleField, ListWidget, CheckboxInput
 from .. import model
 
@@ -12,7 +13,7 @@ class OpenIDLoginForm(Form):
 	next = HiddenField()
 
 class SelectUser(Form):
-	user = QuerySelectField(u'User', query_factory = lambda: model.User.query)
+	user = QuerySelectField(u'User', query_factory = lambda: current_app.session.query(model.User).all())
 
 class MultiCheckboxField(SelectMultipleField):
     widget = ListWidget(prefix_label=False)
@@ -23,6 +24,6 @@ def create_permissions_form(*args, **kwargs):
 		groups = MultiCheckboxField(u'Groups', coerce=int)
 
 	form = PermissionsForm(*args, **kwargs)
-	form.groups.choices = [(group.id, str(group)) for group in model.Group.query.all() if group.name not in ("anonymous", "registered")]
+	form.groups.choices = [(group.id, str(group)) for group in current_app.session.query(model.Group).query.all() if group.name not in ("anonymous", "registered")]
 
 	return form
