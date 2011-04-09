@@ -134,7 +134,7 @@ class UploadToken(Base):
 		super(UploadToken, self).__init__(**kwargs)
 
 	def get_signature(self, key = None):
-		clearinp = '%s||KEY||%s' % (self.id.hex, key or app.config['SECRET_KEY'])
+		clearinp = '%s||KEY||%s' % (self.id.hex, key or current_app.config['SECRET_KEY'])
 		return hashfunc(clearinp).hexdigest()
 
 	def check_signature(self, signature, key = None):
@@ -175,7 +175,7 @@ class File(Base):
 		self.content_type = file_.content_type
 
 		# generate keys for access
-		key_base = '%s:::%s:::%s:::%s:::%d:::%s:::%s:::%s' % (self.filename, self.storage_id, self.uploaded, self.expires, self.size, self.content_type, repr(rand.read(app.config['RANDOM_BYTES_PER_ID'])), app.config['SECRET_KEY'])
+		key_base = '%s:::%s:::%s:::%s:::%d:::%s:::%s:::%s' % (self.filename, self.storage_id, self.uploaded, self.expires, self.size, self.content_type, repr(rand.read(current_app.config['RANDOM_BYTES_PER_ID'])), current_app.config['SECRET_KEY'])
 		self.access_key = hashfunc(key_base).hexdigest()
 		self.public_id = uuid.uuid4()
 
