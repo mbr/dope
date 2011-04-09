@@ -119,8 +119,8 @@ def single_upload():
 			# create new file object
 			f = model.File(current_app.storage, form.uploaded_file.file)
 
-			db.session.add(f)
-			db.session.commit()
+			current_app.session.add(f)
+			current_app.session.commit()
 
 			debug('added: %s', f)
 		finally:
@@ -149,8 +149,8 @@ def upload_send_file():
 		# create new file object
 		f = model.File(current_app.storage, incoming)
 
-		db.session.add(f)
-		db.session.commit()
+		current_app.session.add(f)
+		current_app.session.commit()
 
 		return jsonify(file_url = f.absolute_download_url, file_name = f.filename)
 	finally:
@@ -192,8 +192,8 @@ def edit_permissions_for_user(user_id = None):
 	if form.validate_on_submit():
 		# update groups
 		user.groups = [group for group in current_app.session.query(model.Group).filter(model.Group.id.in_(form.groups.data)).all()]
-		db.session.add(user)
-		db.session.commit()
+		current_app.session.add(user)
+		current_app.session.commit()
 		return redirect(url_for('edit_permissions'))
 	form_markup = render_template('permissions_form.xhtml', form = form, user = user)
 	return render_template('base.xhtml', unsafe_content = form_markup)
@@ -204,8 +204,8 @@ def edit_permissions_for_user(user_id = None):
 @require_permission('create_token')
 def create_upload_token():
 	token = model.UploadToken(owner = g.user)
-	db.session.add(token)
-	db.session.commit()
+	current_app.session.add(token)
+	current_app.session.commit()
 
 	return render_template('token_created.xhtml', token = token.id.hex, signature = token.get_signature(), tokenstring = token.id.hex + token.get_signature())
 
@@ -228,8 +228,8 @@ def api_token_upload():
 	)
 
 	f = model.File(current_app.storage, w)
-	db.session.add(f)
-	db.session.commit()
+	current_app.session.add(f)
+	current_app.session.commit()
 
 	return f.absolute_download_url
 
