@@ -15,8 +15,8 @@ def create_app(config_filename):
 	app.config.from_pyfile(config_filename)
 
 	# init db connection
-	engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'], encoding = 'utf8', echo = app.config['SQLALCHEMY_ECHO'])
-	app.session = scoped_session(sessionmaker(bind = engine))
+	app.engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'], encoding = 'utf8', echo = app.config['SQLALCHEMY_ECHO'])
+	app.session = scoped_session(sessionmaker(bind = app.engine))
 
 	@app.after_request
 	def shutdown_session(response):
