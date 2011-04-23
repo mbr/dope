@@ -13,9 +13,9 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy import Column, Table, Integer, String, ForeignKey, Unicode, DateTime
 
 import uuidtype
-from randomutil import ForkSafeRandom, hashfunc
+from randomutil import hashfunc
 
-rand = ForkSafeRandom()
+rand = os.urandom
 debug = logging.debug
 
 Base = declarative_base()
@@ -175,7 +175,7 @@ class File(Base):
 		self.content_type = file_.content_type
 
 		# generate keys for access
-		key_base = '%s:::%s:::%s:::%s:::%d:::%s:::%s:::%s' % (self.filename, self.storage_id, self.uploaded, self.expires, self.size, self.content_type, repr(rand.read(current_app.config['RANDOM_BYTES_PER_ID'])), current_app.config['SECRET_KEY'])
+		key_base = '%s:::%s:::%s:::%s:::%d:::%s:::%s:::%s' % (self.filename, self.storage_id, self.uploaded, self.expires, self.size, self.content_type, repr(rand(current_app.config['RANDOM_BYTES_PER_ID'])), current_app.config['SECRET_KEY'])
 		self.access_key = hashfunc(key_base).hexdigest()
 		self.public_id = uuid.uuid4()
 
