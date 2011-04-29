@@ -93,11 +93,11 @@ if '__main__' == __name__:
 			continue
 
 		if 403 == response.status:
-			print "bad token - check if settings in %s are correct" % configfile_path
+			print >>sys.stderr,"bad token - check if settings in %s are correct" % configfile_path
 			num_errors += 1
 			continue
 
-		print "error, server said %r" % response.status
+		print >>sys.stderr,"error, server said %r" % response.status
 		num_errors += 1
 
 	sys.exit(num_errors)
