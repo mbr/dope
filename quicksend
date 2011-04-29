@@ -6,7 +6,7 @@ import ConfigParser
 import os
 
 from warnings import warn
-from httplib import HTTPConnection
+from httplib import HTTPConnection, HTTPSConnection
 from urlparse import urlparse
 
 try:
