@@ -24,6 +24,6 @@ def create_permissions_form(*args, **kwargs):
 		groups = MultiCheckboxField(u'Groups', coerce=int)
 
 	form = PermissionsForm(*args, **kwargs)
-	form.groups.choices = [(group.id, str(group)) for group in current_app.session.query(model.Group).query.all() if group.name not in ("anonymous", "registered")]
+	form.groups.choices = [(group.id, str(group)) for group in current_app.session.query(model.Group).all() if group.name not in ("anonymous", "registered")]
 
 	return form
