@@ -1,3 +1,0 @@
-[submodule "acl_module"]
-	path = acl_module
-	url = git://github.com/mbr/acl.git
