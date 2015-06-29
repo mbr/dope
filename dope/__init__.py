@@ -1,8 +1,6 @@
 from flask import Flask
 from flask_appconfig import AppConfig
 
-import model
-
 
 def create_app(configfile=None):
     app = Flask(__name__)
@@ -10,7 +8,7 @@ def create_app(configfile=None):
     AppConfig(app)
 
     # init db connection
-    app.storage = model.FileStorage(app.config['FILE_STORAGE'])
+    #app.storage = model.FileStorage(app.config['FILE_STORAGE'])
 
     # load modules
     #app.register_module(frontend)

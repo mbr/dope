@@ -20,8 +20,13 @@ setup(
     url='http://github.com/mbr/dope',
     license='MIT',
     packages=find_packages(exclude=['tests']),
-    install_requires=['flask', 'flask-appconfig', 'flask-sqlalchemy'],
+    install_requires=['flask', 'flask-appconfig', 'flask-sqlalchemy', 'click'],
     classifiers=[
         'Programming Language :: Python :: 2',
-    ]
+    ],
+    entry_points={
+        'console_scripts': [
+            'dope = dope.cli:cli'
+        ]
+    }
 )
