@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# coding=utf8
-
 import uuid
 import sqlalchemy.types as types
 

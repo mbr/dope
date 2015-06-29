@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# coding=utf8
-
 import hashlib
 
 from flask import current_app

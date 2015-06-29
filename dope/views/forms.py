@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# coding=utf8
-
 from flask import current_app
 from flaskext.wtf import Form, FileField, Required, TextField, HiddenField, QuerySelectField, SelectMultipleField, ListWidget, CheckboxInput
 from .. import model
