@@ -1,16 +1,13 @@
 from flask import Flask
 from flask_appconfig import AppConfig
 
+from .model import db
+
 
 def create_app(configfile=None):
     app = Flask(__name__)
 
     AppConfig(app)
-
-    # init db connection
-    #app.storage = model.FileStorage(app.config['FILE_STORAGE'])
-
-    # load modules
-    #app.register_module(frontend)
+    db.init_app(app)
 
     return app
