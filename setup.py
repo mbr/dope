@@ -21,7 +21,7 @@ setup(
     license='MIT',
     packages=find_packages(exclude=['tests']),
     install_requires=['flask', 'flask-appconfig', 'flask-sqlalchemy', 'click',
-                      'sqlalchemy-utils', 'blinker', 'passlib'],
+                      'sqlalchemy-utils', 'passlib', 'flask-bootstrap'],
     classifiers=[
         'Programming Language :: Python :: 2',
     ],

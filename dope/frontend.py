@@ -1,4 +1,4 @@
-from flask import Blueprint
+from flask import Blueprint, redirect, url_for, render_template
 
 from .auth import Auth, HTTPBasicAuth, ConfPasswordValidator
 
@@ -10,6 +10,11 @@ frontend = Blueprint('frontend', __name__)
 
 
 @frontend.route('/')
-@auth.requires_login
 def index():
-    return 'hello'
+    return redirect(url_for('.upload_file'))
+
+
+@frontend.route('/upload-file/')
+@auth.requires_login
+def upload_file():
+    return render_template('logobase.html')
