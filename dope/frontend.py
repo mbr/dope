@@ -1,14 +1,15 @@
 from flask import Blueprint
 
-from .auth import requires_login, HTTPBasicAuth, ConfPasswordValidator
+from .auth import Auth, HTTPBasicAuth, ConfPasswordValidator
 
+
+auth = Auth()
+auth.add_method(HTTPBasicAuth(ConfPasswordValidator('FRONTEND_PASSWORD')))
 
 frontend = Blueprint('frontend', __name__)
-frontend_auth = HTTPBasicAuth(ConfPasswordValidator('FRONTEND_PASSWORD'))
-frontend_auth.activate()
 
 
 @frontend.route('/')
-@requires_login
+@auth.requires_login
 def index():
     return 'hello'

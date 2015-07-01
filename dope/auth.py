@@ -5,43 +5,55 @@
 from functools import wraps
 
 from flask import abort, Response, request, current_app
-from blinker import Namespace
 from passlib.utils import consteq
 
 
-signals = Namespace()
-auth_needed = signals.signal('auth-needed')
-new_auth_requested = signals.signal('new-auth-requested')
-
-
-def requires_login(f):
-    @wraps(f)
-    def _(*args, **kwargs):
-        for receiver, auth_object in auth_needed.send(request.endpoint):
-            # check if we have a login already
-            if auth_object is not None:
-                break
-        else:
-            # tell others we're missing a login (redirect to one)
-            for receiver, response in\
-                    new_auth_requested.send(request.endpoint):
-                if response is not None:
-                    return response
-            else:
-                abort(403, 'Requested new auth, none received')
-        return f(*args, **kwargs)
-    return _
-
-
 class Auth(object):
-    def activate(self):
-        auth_needed.connect(self.on_auth_needed)
-        new_auth_requested.connect(self.on_new_auth_requested)
+    def __init__(self, methods=None):
+        self.methods = methods or []
 
-    def on_auth_needed(self, endpoint):
+    def add_method(self, method):
+        self.methods.append(method)
+
+    def destroy(self):
+        pass  # nothing persisted, nothing to destroy
+
+    def persist(self, auth):
+        pass  # do not persist, require new login each time
+
+    def requires_login(self, f):
+        @wraps(f)
+        def _(*args, **kwargs):
+            for method in self.methods:
+                auth = method.get_current_auth()
+                if auth:
+                    self.persist(auth)
+                    break
+            else:
+                # no auth found, request one
+                for method in self.methods:
+                    response = method.request_new_auth()
+
+                    if response:
+                        return response
+                else:
+                    abort(403, 'Requested new auth, none received')
+
+            # all good, we're authed
+            return f(*args, **kwargs)
+        return _
+
+
+class AuthMethod(object):
+    def get_current_auth(self):
         pass
 
-    def on_new_auth_requested(self, endpoint):
+    def request_new_auth(self):
+        pass
+
+
+class AuthBackend(object):
+    def verify(self, creds):
         pass
 
 
@@ -55,12 +67,7 @@ class UserPasswordCredentials(Credentials):
         self.password = password
 
 
-class CredentialValidator(object):
-    def verify(self, creds):
-        pass
-
-
-class ConfPasswordValidator(CredentialValidator):
+class ConfPasswordValidator(AuthBackend):
     def __init__(self, varname):
         self.varname = varname
 
@@ -69,13 +76,13 @@ class ConfPasswordValidator(CredentialValidator):
             return creds.username
 
 
-class HTTPBasicAuth(Auth):
+class HTTPBasicAuth(AuthMethod):
     def __init__(self, validator, msg='Please login.', realm='Login required'):
         self.validator = validator
         self.msg = msg
         self.realm = realm
 
-    def on_auth_needed(self, endpoint):
+    def get_current_auth(self):
         # we're checking if credentials have been suppied
         auth = request.authorization
 
@@ -85,7 +92,7 @@ class HTTPBasicAuth(Auth):
             )
             return self.validator.verify(creds)
 
-    def on_new_auth_requested(self, endpoint):
+    def request_new_auth(self):
         return Response(
             'Please login', 401,
             {'WWW-Authenticate': 'Basic realm="Login required"'}
