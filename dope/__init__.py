@@ -20,6 +20,20 @@ def create_app(configfile=None):
             app.config['STORAGE_FS_PATH'],
             app.config['STORAGE_FS_URL_PREFIX'],
         )
+    elif app.config['STORAGE_TYPE'] == 's3':
+        import boto
+
+        con = boto.connect_s3(
+            app.config['BOTO_ACCESS_KEY'],
+            app.config['BOTO_SECRET_KEY'],
+        )
+
+        bucket = con.get_bucket(app.config['BOTO_BUCKET_NAME'])
+
+        app.storage = storage.BotoStorage(
+            bucket,
+            app.config['BOTO_REDUCED_REDUNDANCY']
+        )
     else:
         raise ValueError(
             'Invalid storage type: {}'.format(app.config['STORAGE_TYPE']))

@@ -1,5 +1,8 @@
 from hashlib import sha1
 import os
+from urllib import quote
+
+from boto.s3.key import Key
 
 from simplekv.fs import FilesystemStore, WebFilesystemStore
 
@@ -7,11 +10,6 @@ from .model import db, File
 
 
 class Storage(object):
-    def __init__(self, store):
-        # write-lock, required to avoid deletion of uploaded files before
-        # refcount checking is complete
-        self.store = store
-
     def store_uploaded_file(self, file):
         h = sha1()
 
@@ -33,11 +31,11 @@ class Storage(object):
 
         # check if we need to upload
         filename = unicode(file.filename)
-        if File.get_refcount(digest) > 0:
+        if File.get_refcount(digest) == 0:
             # this should not block until the upload is complete, because the
             # db can figure out that reading other stuff is fine. hopefully
             file.stream.seek(0)
-            self.store.put_file(digest, file.stream)
+            self._store_file(digest, file.stream)
 
         f = File(
             hash=digest,
@@ -49,11 +47,6 @@ class Storage(object):
 
         return f
 
-    def get_download_url(self, file):
-        if hasattr(self.store, 'url_for'):
-            return self.store.url_for(file.hash)
-        return 'foo'
-
 
 class FilesystemStorage(Storage):
     def __init__(self, path, storage_url_prefix=None):
@@ -61,7 +54,38 @@ class FilesystemStorage(Storage):
             raise RuntimeError('Path {} does not exist'.format(path))
 
         if storage_url_prefix is None:
-            base_store = FilesystemStore(path)
+            self.store = FilesystemStore(path)
         else:
-            base_store = WebFilesystemStore(path, storage_url_prefix)
-        super(FilesystemStorage, self).__init__(base_store)
+            self.store = WebFilesystemStore(path, storage_url_prefix)
+
+    def _store_file(self, hash, file):
+        self.store.put_file(hash, file)
+
+    def get_download_url(self, file):
+        if hasattr(self.store, 'url_for'):
+            return self.store.url_for(file.hash)
+
+
+class BotoStorage(Storage):
+    def __init__(self, bucket, reduced_redundancy=False):
+        self.bucket = bucket
+        self.reduced_redundancy = reduced_redundancy
+
+    def _store_file(self, hash, file):
+        k = Key(self.bucket, hash)
+        k.set_contents_from_file(
+            file,
+            reduced_redundancy=self.reduced_redundancy,
+        )
+        k.set_acl('public-read')
+
+    def get_download_url(self, file):
+        k = Key(self.bucket, file.hash)
+        url = k.generate_url(
+            expires_in=60,  # valid for one minute
+            query_auth=True,
+            response_headers={
+                'response-content-disposition': 'attachment; filename="{}"'
+                .format(quote(file.filename.encode('utf8')))}
+        )
+        return url

@@ -22,7 +22,7 @@ setup(
     packages=find_packages(exclude=['tests']),
     install_requires=['flask', 'flask-appconfig', 'flask-sqlalchemy', 'click',
                       'sqlalchemy-utils', 'passlib', 'flask-bootstrap',
-                      'flask-wtf', 'simplekv'],
+                      'flask-wtf', 'simplekv', 'boto'],
     classifiers=[
         'Programming Language :: Python :: 2',
     ],
