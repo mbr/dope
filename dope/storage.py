@@ -49,6 +49,11 @@ class Storage(object):
 
         return f
 
+    def get_download_url(self, file):
+        if hasattr(self.store, 'url_for'):
+            return self.store.url_for(file.hash)
+        return 'foo'
+
 
 class FilesystemStorage(Storage):
     def __init__(self, path, storage_url_prefix=None):

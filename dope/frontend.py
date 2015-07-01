@@ -30,6 +30,7 @@ def upload_file():
 
     if form.validate_on_submit():
         fl = current_app.storage.store_uploaded_file(form.file.data)
-        return 'ok'
+
+        return render_template('upload-successful.html', files=[fl])
 
     return render_template('upload-file.html', form=form)
