@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, url_for, render_template
+from flask import Blueprint, redirect, url_for, render_template, current_app
 from flask_wtf import Form
 from wtforms.fields import SubmitField
 from wtforms.validators import Required
@@ -29,6 +29,7 @@ def upload_file():
     form = UploadForm()
 
     if form.validate_on_submit():
+        fl = current_app.storage.store_uploaded_file(form.file.data)
         return 'ok'
 
     return render_template('upload-file.html', form=form)
