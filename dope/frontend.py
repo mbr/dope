@@ -5,6 +5,7 @@ from wtforms.validators import Required
 from flask_wtf.file import FileField
 
 from .auth import Auth, HTTPBasicAuth, ConfPasswordValidator
+from .model import File
 
 
 class UploadForm(Form):
@@ -34,3 +35,10 @@ def upload_file():
         return render_template('upload-successful.html', files=[fl])
 
     return render_template('upload-file.html', form=form)
+
+
+@frontend.route('/download-file/<uuid:id>/')
+def download_file(id):
+    f = File.query.get_or_404(id)
+
+    return redirect(f.get_download_url())

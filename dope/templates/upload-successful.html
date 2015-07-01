@@ -8,8 +8,10 @@
     <p>Your data has been uploaded succesfully:</p>
     {% for file in files %}
       <h2>{{file.filename}}</h2>
-      {% with url = file.get_download_url() %}
-        The file can be downloaded at <strong><a href="{{url}}">{{url}}</a></strong>
+      {% with url = url_for('.download_file', id=file.id, _external=True) %}
+        The file can be downloaded at <strong>
+          <a href="{{url}}">{{url}}</a>
+        </strong>
       {% endwith %}
     {% endfor %}
   </div>

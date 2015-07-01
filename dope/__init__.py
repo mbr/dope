@@ -5,10 +5,13 @@ from flask_bootstrap import Bootstrap
 from . import storage
 from .frontend import frontend
 from .model import db
+from .util import UUIDConverter
 
 
 def create_app(configfile=None):
     app = Flask(__name__)
+
+    app.url_map.converters['uuid'] = UUIDConverter
 
     AppConfig(app)
     Bootstrap(app)
