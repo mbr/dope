@@ -1,1 +1,2 @@
 STORAGE_TYPE = 'filesystem'
+STORAGE_FS_URL_PREFIX = None

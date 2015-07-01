@@ -17,7 +17,8 @@ def create_app(configfile=None):
 
     if app.config['STORAGE_TYPE'] == 'filesystem':
         app.storage = storage.FilesystemStorage(
-            app.config['STORAGE_FS_PATH']
+            app.config['STORAGE_FS_PATH'],
+            app.config['STORAGE_FS_URL_PREFIX'],
         )
     else:
         raise ValueError(

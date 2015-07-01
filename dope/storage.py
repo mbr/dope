@@ -1,7 +1,7 @@
 from hashlib import sha1
 import os
 
-from simplekv.fs import FilesystemStore
+from simplekv.fs import FilesystemStore, WebFilesystemStore
 
 from .model import db, File
 
@@ -51,9 +51,12 @@ class Storage(object):
 
 
 class FilesystemStorage(Storage):
-    def __init__(self, path):
+    def __init__(self, path, storage_url_prefix=None):
         if not os.path.exists(path):
             raise RuntimeError('Path {} does not exist'.format(path))
 
-        base_store = FilesystemStore(path)
+        if storage_url_prefix is None:
+            base_store = FilesystemStore(path)
+        else:
+            base_store = WebFilesystemStore(path, storage_url_prefix)
         super(FilesystemStorage, self).__init__(base_store)
