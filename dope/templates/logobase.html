@@ -4,7 +4,9 @@
 <div class="container">
       <div class="row">
         <div class="col-md-9 col-md-offset-2">
-          <img src="{{url_for('static', filename = 'dope_banner.png')}}" alt="dope banner" id="banner"/>
+          <a href="{{url_for('.index')}}">
+            <img src="{{url_for('static', filename = 'dope_banner.png')}}" alt="dope banner" id="banner"/>
+          </a>
         </div>
       </div>
 </div>
