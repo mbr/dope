@@ -5,4 +5,6 @@ from werkzeug.routing import BaseConverter
 
 class UUIDConverter(BaseConverter):
     to_python = UUID
-    to_url = str
+
+    def to_url(self, obj):
+        return str(obj).replace('-', '')
